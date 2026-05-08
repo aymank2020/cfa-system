@@ -1,11 +1,15 @@
 import pandas as pd
 
 
-def create_income_statement(entries):
+def _legacy_classify(account):
+    return "Revenue" if "revenue" in account.lower() else "Expense"
+
+
+def create_income_statement(entries, classification_map=None):
+    if classification_map is None:
+        classification_map = {}
     df = pd.DataFrame(entries)
-    df["type"] = df["account"].apply(
-        lambda a: "Revenue" if "revenue" in a.lower() else "Expense"
-    )
+    df["type"] = df["account"].apply(lambda a: classification_map.get(a) or _legacy_classify(a))
 
     revenues = (
         df[df["type"] == "Revenue"]["credit"].sum()

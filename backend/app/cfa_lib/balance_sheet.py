@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def _classify(account):
+def _legacy_classify(account):
     name = account.lower()
     if "asset" in name:
         return "Asset"
@@ -10,9 +10,11 @@ def _classify(account):
     return "Equity"
 
 
-def create_balance_sheet(entries):
+def create_balance_sheet(entries, classification_map=None):
+    if classification_map is None:
+        classification_map = {}
     df = pd.DataFrame(entries)
-    df["type"] = df["account"].apply(_classify)
+    df["type"] = df["account"].apply(lambda a: classification_map.get(a) or _legacy_classify(a))
 
     assets = df[df["type"] == "Asset"]["debit"].sum() - df[df["type"] == "Asset"]["credit"].sum()
     liabilities = df[df["type"] == "Liability"]["credit"].sum() - df[df["type"] == "Liability"]["debit"].sum()

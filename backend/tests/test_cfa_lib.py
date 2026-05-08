@@ -16,6 +16,9 @@ from app.cfa_lib.income_statement import create_income_statement
 from app.cfa_lib.journal_entry import validate_journal_entry
 from app.cfa_lib.tax_calculator import calculate_tax
 from app.cfa_lib.trial_balance import create_trial_balance_df
+from app.cfa_lib.inventory import inventory_valuation
+from app.cfa_lib.budget import create_budget
+from app.cfa_lib.payroll import calculate_payroll
 
 
 # ── trial_balance ──
@@ -134,8 +137,16 @@ def test_current_ratio():
     assert current_ratio(200000, 100000) == 2.0
 
 
+def test_current_ratio_zero_liabilities():
+    assert current_ratio(100, 0) is None
+
+
 def test_debt_to_equity():
     assert debt_to_equity(300000, 500000) == 0.6
+
+
+def test_debt_to_equity_zero_equity():
+    assert debt_to_equity(50, 0) is None
 
 
 def test_return_on_assets():
@@ -153,4 +164,69 @@ def test_loan_amortization():
     assert len(df) == 3
     assert df.iloc[0]["month"] == 1
     assert df.iloc[-1]["balance"] == 0.0
-    assert abs(df["payment"].nunique()) == 1  # same payment every month
+    assert df["payment"].nunique() == 1  # same payment every month
+
+
+def test_loan_amortization_zero_rate():
+    df = loan_amortization(10000, 0, 3)
+    assert len(df) == 3
+    assert df.iloc[0]["interest"] == 0.0
+    assert df.iloc[-1]["balance"] == 0.0
+
+
+def test_loan_amortization_zero_months():
+    df = loan_amortization(10000, 5, 0)
+    assert len(df) == 0
+
+
+# ── inventory ──
+
+def test_inventory_fifo():
+    items = [
+        {"name": "Widget", "quantity": 100, "unit_cost": 10},
+        {"name": "Widget", "quantity": 50, "unit_cost": 15},
+    ]
+    df = inventory_valuation(items, "fifo")
+    assert df.loc[0, "name"] == "Widget"
+    assert df.loc[0, "unit_cost"] == 10.0
+
+
+def test_inventory_wac():
+    items = [
+        {"name": "Item", "quantity": 200, "unit_cost": 5},
+        {"name": "Item", "quantity": 100, "unit_cost": 8},
+    ]
+    df = inventory_valuation(items, "wac")
+    total = 200 * 5 + 100 * 8
+    avg = total / 300
+    assert df.loc[0, "unit_cost"] == round(avg, 2)
+
+
+# ── classification_map ──
+
+def test_balance_sheet_with_map():
+    entries = [{"account": "Cash", "debit": 10000, "credit": 0}]
+    df = create_balance_sheet(entries, {"Cash": "Asset"})
+    assert df.loc[df["item"] == "Assets", "amount"].values[0] == 10000
+
+
+def test_income_statement_with_map():
+    entries = [{"account": "Sales", "debit": 0, "credit": 5000}]
+    df = create_income_statement(entries, {"Sales": "Revenue"})
+    assert df.loc[df["item"] == "Revenue", "amount"].values[0] == 5000
+
+
+# ── payroll ──
+
+def test_calculate_payroll():
+    result = calculate_payroll(160, 50, 20, 500)
+    assert result["gross_pay"] == 8000
+    assert result["net_pay"] == 5900
+
+
+# ── budget ──
+
+def test_create_budget():
+    items = [{"category": "Rent", "budgeted": 2000, "actual": 2000}]
+    df = create_budget(items)
+    assert df.loc[0, "variance"] == 0.0

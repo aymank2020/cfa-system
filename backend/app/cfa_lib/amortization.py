@@ -2,8 +2,11 @@ import pandas as pd
 
 
 def loan_amortization(principal, annual_rate, months):
-    monthly_rate = annual_rate / 12 / 100
-    payment = principal * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)
+    if months == 0:
+        return pd.DataFrame(columns=["month", "payment", "principal", "interest", "balance"])
+
+    monthly_rate = annual_rate / 12 / 100 if annual_rate != 0 else 0
+    payment = (principal * (monthly_rate * (1 + monthly_rate) ** months) / ((1 + monthly_rate) ** months - 1)) if monthly_rate > 0 else principal / months
 
     rows = []
     balance = principal

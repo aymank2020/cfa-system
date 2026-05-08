@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import execute, files
+from app.api import cfa, execute, files
 
 app = FastAPI(title="CFA System", version="0.1.0")
 
@@ -18,6 +18,7 @@ app.add_middleware(
 
 app.include_router(files.router)
 app.include_router(execute.router)
+app.include_router(cfa.router)
 
 
 @app.get("/")

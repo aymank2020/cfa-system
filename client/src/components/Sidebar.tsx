@@ -10,11 +10,14 @@ const tools: { name: string; href: string; icon: string }[] = [
   { name: "General Ledger", href: "#", icon: "📓" },
   { name: "Income Statement", href: "/income-statement", icon: "📊" },
   { name: "Balance Sheet", href: "/balance-sheet", icon: "📋" },
+  { name: "Budget", href: "/budget", icon: "📊" },
+  { name: "Payroll", href: "/payroll", icon: "💰" },
   { name: "Tax Calculator", href: "#", icon: "💰" },
   { name: "Depreciation", href: "#", icon: "📉" },
   { name: "Cash Flow", href: "#", icon: "💵" },
   { name: "Financial Ratios", href: "#", icon: "📐" },
   { name: "Amortization", href: "#", icon: "🏦" },
+  { name: "Inventory", href: "#", icon: "📦" },
 ];
 
 export default function Sidebar({ children }: { children: ReactNode }) {

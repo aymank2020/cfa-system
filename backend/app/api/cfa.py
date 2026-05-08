@@ -3,9 +3,16 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from app.cfa_lib.amortization import loan_amortization
 from app.cfa_lib.balance_sheet import create_balance_sheet
 from app.cfa_lib.cash_flow import create_cash_flow_statement
 from app.cfa_lib.depreciation import straight_line_depreciation
+from app.cfa_lib.financial_ratios import (
+    current_ratio,
+    debt_to_equity,
+    return_on_assets,
+    return_on_equity,
+)
 from app.cfa_lib.general_ledger import create_general_ledger
 from app.cfa_lib.income_statement import create_income_statement
 from app.cfa_lib.journal_entry import validate_journal_entry
@@ -40,6 +47,22 @@ class DepreciationInput(BaseModel):
 class CashFlowItem(BaseModel):
     account: str
     amount: float
+
+
+class FinancialRatiosInput(BaseModel):
+    current_assets: float
+    current_liabilities: float
+    total_debt: float
+    total_equity: float
+    net_income: float
+    total_assets: float
+    shareholders_equity: float
+
+
+class AmortizationInput(BaseModel):
+    principal: float
+    annual_rate: float
+    months: int
 
 
 @router.post("/trial-balance")
@@ -91,4 +114,20 @@ async def post_cash_flow_statement(
     inv = [e.model_dump() for e in investing]
     fin = [e.model_dump() for e in financing]
     df = create_cash_flow_statement(op, inv, fin)
+    return df.to_dict(orient="records")
+
+
+@router.post("/financial-ratios")
+async def post_financial_ratios(data: FinancialRatiosInput):
+    return {
+        "current_ratio": current_ratio(data.current_assets, data.current_liabilities),
+        "debt_to_equity": debt_to_equity(data.total_debt, data.total_equity),
+        "return_on_assets": return_on_assets(data.net_income, data.total_assets),
+        "return_on_equity": return_on_equity(data.net_income, data.shareholders_equity),
+    }
+
+
+@router.post("/amortization")
+async def post_amortization(data: AmortizationInput):
+    df = loan_amortization(data.principal, data.annual_rate, data.months)
     return df.to_dict(orient="records")

@@ -5,19 +5,20 @@ import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
 
 const tools: { name: string; href: string; icon: string }[] = [
+  { name: "Dashboard", href: "/", icon: "🏠" },
   { name: "Trial Balance", href: "/trial-balance", icon: "⚖️" },
-  { name: "Journal Entry", href: "#", icon: "📝" },
-  { name: "General Ledger", href: "#", icon: "📓" },
+  { name: "Journal Entry", href: "/journal-entry", icon: "📝" },
+  { name: "General Ledger", href: "/general-ledger", icon: "📓" },
   { name: "Income Statement", href: "/income-statement", icon: "📊" },
   { name: "Balance Sheet", href: "/balance-sheet", icon: "📋" },
+  { name: "Cash Flow", href: "/cash-flow", icon: "💵" },
+  { name: "Tax Calculator", href: "/tax-calculator", icon: "💰" },
+  { name: "Depreciation", href: "/depreciation", icon: "📉" },
+  { name: "Financial Ratios", href: "/financial-ratios", icon: "📐" },
+  { name: "Amortization", href: "/amortization", icon: "🏦" },
+  { name: "Payroll", href: "/payroll", icon: "👔" },
   { name: "Budget", href: "/budget", icon: "📊" },
-  { name: "Payroll", href: "/payroll", icon: "💰" },
-  { name: "Tax Calculator", href: "#", icon: "💰" },
-  { name: "Depreciation", href: "#", icon: "📉" },
-  { name: "Cash Flow", href: "#", icon: "💵" },
-  { name: "Financial Ratios", href: "#", icon: "📐" },
-  { name: "Amortization", href: "#", icon: "🏦" },
-  { name: "Inventory", href: "#", icon: "📦" },
+  { name: "Inventory", href: "/inventory", icon: "📦" },
 ];
 
 export default function Sidebar({ children }: { children: ReactNode }) {
@@ -41,11 +42,8 @@ export default function Sidebar({ children }: { children: ReactNode }) {
                 className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
                   active
                     ? "bg-emerald-700/30 text-emerald-300"
-                    : t.href === "#"
-                      ? "text-zinc-500 cursor-not-allowed"
-                      : "text-zinc-300 hover:bg-zinc-800"
+                    : "text-zinc-300 hover:bg-zinc-800"
                 }`}
-                onClick={(e) => t.href === "#" && e.preventDefault()}
               >
                 <span>{t.icon}</span>
                 <span>{t.name}</span>

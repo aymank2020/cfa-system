@@ -3,33 +3,50 @@ from __future__ import annotations
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
+from app.cfa_lib.balance_sheet import create_balance_sheet
+from app.cfa_lib.general_ledger import create_general_ledger
+from app.cfa_lib.income_statement import create_income_statement
+from app.cfa_lib.journal_entry import validate_journal_entry
 from app.cfa_lib.trial_balance import create_trial_balance_df
 
 router = APIRouter(prefix="/cfa", tags=["cfa"])
 
 
-class TrialBalanceEntry(BaseModel):
-    account: str = Field(..., description="Name of the account.")
-    debit: float = Field(0.0, description="Debit amount for the account.")
-    credit: float = Field(0.0, description="Credit amount for the account.")
+class Entry(BaseModel):
+    account: str
+    debit: float = 0.0
+    credit: float = 0.0
+
+
+class LedgerEntry(Entry):
+    date: str
+    description: str
 
 
 @router.post("/trial-balance")
-async def get_trial_balance(
-    entries: list[TrialBalanceEntry],
-) -> list[dict[str, str | float]]:
-    """Accepts a list of account entries and returns a formatted Trial Balance.
+async def get_trial_balance(entries: list[Entry]) -> list[dict[str, str | float]]:
+    entries_dicts = [e.model_dump() for e in entries]
+    return create_trial_balance_df(entries_dicts).to_dict(orient="records")
 
-    Args:
-        entries: A list of dicts, each with 'account', 'debit', and 'credit'.
 
-    Returns:
-        A list of dicts representing the trial balance, including calculated balances.
-    """
-    # Convert Pydantic models to dicts for the pandas function
-    entries_dicts = [entry.model_dump() for entry in entries]
-    
-    tb_df = create_trial_balance_df(entries_dicts)
-    
-    # Convert DataFrame back to a list of dicts for JSON response
-    return tb_df.to_dict(orient="records")
+@router.post("/journal-entry")
+async def post_journal_entry(entries: list[Entry]):
+    return validate_journal_entry([e.model_dump() for e in entries])
+
+
+@router.post("/general-ledger")
+async def post_general_ledger(entries: list[LedgerEntry]):
+    df = create_general_ledger([e.model_dump() for e in entries])
+    return df.to_dict(orient="records")
+
+
+@router.post("/income-statement")
+async def post_income_statement(entries: list[Entry]):
+    df = create_income_statement([e.model_dump() for e in entries])
+    return df.to_dict(orient="records")
+
+
+@router.post("/balance-sheet")
+async def post_balance_sheet(entries: list[Entry]):
+    df = create_balance_sheet([e.model_dump() for e in entries])
+    return df.to_dict(orient="records")

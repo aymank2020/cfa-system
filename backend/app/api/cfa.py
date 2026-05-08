@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from app.cfa_lib.amortization import loan_amortization
 from app.cfa_lib.balance_sheet import create_balance_sheet
+from app.cfa_lib.budget import create_budget
 from app.cfa_lib.cash_flow import create_cash_flow_statement
 from app.cfa_lib.depreciation import straight_line_depreciation
 from app.cfa_lib.financial_ratios import (
@@ -15,7 +16,9 @@ from app.cfa_lib.financial_ratios import (
 )
 from app.cfa_lib.general_ledger import create_general_ledger
 from app.cfa_lib.income_statement import create_income_statement
+from app.cfa_lib.inventory import inventory_valuation
 from app.cfa_lib.journal_entry import validate_journal_entry
+from app.cfa_lib.payroll import calculate_payroll
 from app.cfa_lib.tax_calculator import calculate_tax
 from app.cfa_lib.trial_balance import create_trial_balance_df
 
@@ -63,6 +66,25 @@ class AmortizationInput(BaseModel):
     principal: float
     annual_rate: float
     months: int
+
+
+class PayrollInput(BaseModel):
+    hours_worked: float
+    hourly_rate: float
+    tax_rate: float
+    deductions: float
+
+
+class BudgetItem(BaseModel):
+    category: str
+    budgeted: float
+    actual: float
+
+
+class InventoryItem(BaseModel):
+    name: str
+    quantity: float
+    unit_cost: float
 
 
 @router.post("/trial-balance")
@@ -130,4 +152,23 @@ async def post_financial_ratios(data: FinancialRatiosInput):
 @router.post("/amortization")
 async def post_amortization(data: AmortizationInput):
     df = loan_amortization(data.principal, data.annual_rate, data.months)
+    return df.to_dict(orient="records")
+
+
+@router.post("/payroll")
+async def post_payroll(data: PayrollInput):
+    return calculate_payroll(
+        data.hours_worked, data.hourly_rate, data.tax_rate, data.deductions
+    )
+
+
+@router.post("/budget")
+async def post_budget(items: list[BudgetItem]):
+    df = create_budget([e.model_dump() for e in items])
+    return df.to_dict(orient="records")
+
+
+@router.post("/inventory")
+async def post_inventory(items: list[InventoryItem], method: str = "fifo"):
+    df = inventory_valuation([e.model_dump() for e in items], method)
     return df.to_dict(orient="records")

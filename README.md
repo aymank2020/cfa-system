@@ -2,7 +2,7 @@
 
 A web-based IDE for **accounting and financial analysis in Python** — think Replit, but purpose-built for parsing ledgers, computing taxes, generating balance sheets, and visualising financial data.
 
-> **Status:** early development. Backend MVP (files + execute) is working. Frontend and sandboxing are next.
+> **Status:** local MVP with a Next.js financial-tool frontend, file APIs, Python execution, and accounting helpers. Execution sandboxing and authentication remain open deployment requirements.
 
 ## Features
 
@@ -15,12 +15,10 @@ A web-based IDE for **accounting and financial analysis in Python** — think Re
 - `POST /execute/run` — run a Python snippet via the backend venv, with timeout + output caps
 
 **Planned**
-- Next.js frontend with Monaco editor, file tree, terminal panel
+- Execution sandbox and authenticated per-user workspaces
 - WebSocket streaming for long-running executions
 - CSV / XLSX upload endpoint
-- `cfa_lib/` — reusable tax / P&L / balance-sheet helpers
-- Real execution sandbox (Docker or nsjail) — currently **not sandboxed**
-- Auth + per-user workspaces
+- Deeper validation of accounting inputs and error behavior
 - Chart rendering (matplotlib/plotly)
 
 ## Architecture
@@ -51,10 +49,10 @@ CFA-System/
 │   │   │   ├── files.py         /files/list, /files/read, /files/write
 │   │   │   └── execute.py       /execute/run
 │   │   ├── services/            (reserved for execution/sandbox services)
-│   │   └── cfa_lib/             (reserved for accounting helpers)
+│   │   └── cfa_lib/             (accounting helpers)
 │   ├── requirements.txt
 │   └── .venv/                   gitignored
-├── client/                      Next.js frontend (not yet scaffolded)
+├── client/                      Next.js financial tools and editor interface
 ├── workspace/                   user project files (gitignored)
 ├── .gitignore
 └── README.md
@@ -78,10 +76,17 @@ Visit `http://127.0.0.1:8000/docs` for the auto-generated Swagger UI.
 
 ### Frontend
 
-Not yet scaffolded. Target stack:
-- Next.js (TypeScript)
-- Tailwind CSS
-- `@monaco-editor/react`
+The frontend is implemented with Next.js, TypeScript, Tailwind CSS, and Monaco:
+
+```bash
+cd client
+npm ci
+npm run dev
+```
+
+Run `python -m pytest tests/ -q` from `backend` and `npm run build` from `client`.
+Workspace API regressions cover user-owned sibling files, simultaneous saves,
+and save -> Python execute -> read through the registered HTTP endpoints.
 
 ## API quick reference
 

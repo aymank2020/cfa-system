@@ -65,7 +65,7 @@ def _truncate(data: bytes, cap: int) -> tuple[str, bool]:
 
 
 @router.post("/run")
-async def run_code(body: RunRequest) -> dict:
+def run_code(body: RunRequest) -> dict:
     """Execute a Python snippet and return its output.
 
     Request JSON:

@@ -8,6 +8,7 @@ flat listing; recursive traversal and file contents come later.
 from __future__ import annotations
 
 from pathlib import Path
+import tempfile
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -176,13 +177,15 @@ async def write_file(body: WriteFileRequest) -> dict:
 
     # Atomic-ish write: stage to a sibling temp file, then rename. Prevents a
     # truncated file on the disk if the process dies mid-write.
-    tmp_path = abs_path.with_name(abs_path.name + ".tmp")
+    tmp_path = None
     try:
-        tmp_path.write_bytes(encoded)
+        with tempfile.NamedTemporaryFile(mode="wb", dir=abs_path.parent, prefix=".cfa-write-", delete=False) as staged:
+            tmp_path = Path(staged.name)
+            staged.write(encoded)
         tmp_path.replace(abs_path)
     except OSError as exc:
         # Clean up the temp file if rename failed.
-        if tmp_path.exists():
+        if tmp_path is not None and tmp_path.exists():
             try:
                 tmp_path.unlink()
             except OSError:
